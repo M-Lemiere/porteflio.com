@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Flipbook PDF A3 Vertical Responsive</title>
+<title>Flipbook PDF A3 Vertical Animé</title>
 <link rel="stylesheet" href="style.css">
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -16,7 +16,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc =
 </head>
 <body>
 
-<h1>Flipbook PDF A3 Vertical Responsive</h1>
+<h1>Flipbook PDF A3 Vertical Animé</h1>
 <div class="container">
     <div id="flipbook"></div>
 </div>
@@ -41,11 +41,11 @@ pdfjsLib.getDocument(url).promise.then(pdf => {
             page.render({ canvasContext: ctx, viewport: viewport }).promise.then(() => {
                 const div = $('<div class="page"></div>').append(canvas);
 
-                // Overlay gauche/droite
+                // Overlay clic gauche/droite
                 const overlayLeft = $('<div class="page-overlay left"></div>');
                 const overlayRight = $('<div class="page-overlay right"></div>');
-                overlayLeft.click(()=> flipbook.turn("previous"));
-                overlayRight.click(()=> flipbook.turn("next"));
+                overlayLeft.click(() => flipbook.turn("previous"));
+                overlayRight.click(() => flipbook.turn("next"));
                 div.append(overlayLeft, overlayRight);
 
                 pagesData[i-1] = div;
@@ -59,14 +59,17 @@ pdfjsLib.getDocument(url).promise.then(pdf => {
                     const pageWidth = firstCanvas.width;
                     const pageHeight = firstCanvas.height;
 
-                    // Créer flipbook avec dimensions réelles
+                    // Init flipbook avec animation
                     flipbook.turn({
                         width: pageWidth,
                         height: pageHeight,
-                        autoCenter: true
+                        autoCenter: true,
+                        duration: 1000, // durée de l'animation en ms
+                        acceleration: true,
+                        gradients: true
                     });
 
-                    // Fonction responsive : scale flipbook entier
+                    // Responsive : scale flipbook pour s'adapter au conteneur
                     function resizeFlipbook() {
                         const containerWidth = $('.container').width();
                         const scale = Math.min(containerWidth / pageWidth, 1);
@@ -79,25 +82,20 @@ pdfjsLib.getDocument(url).promise.then(pdf => {
                     resizeFlipbook();
                     $(window).resize(resizeFlipbook);
 
-                    // Zoom tactile
-                    const hammertime = new Hammer(flipbook[0]);
+                    // Zoom tactile et molette
                     let zoomScale = 1;
+                    const hammertime = new Hammer(flipbook[0]);
                     hammertime.get("pinch").set({ enable: true });
                     hammertime.on("pinch", ev => {
                         zoomScale = Math.min(Math.max(zoomScale * ev.scale, 0.5), 3);
-                        pagesData.forEach(p => {
-                            p.css("transform", `scale(${zoomScale})`);
-                        });
+                        pagesData.forEach(p => p.css("transform", `scale(${zoomScale})`));
                     });
 
-                    // Zoom molette
                     flipbook.on("wheel", e => {
                         e.preventDefault();
                         zoomScale += e.originalEvent.deltaY < 0 ? 0.1 : -0.1;
                         zoomScale = Math.min(Math.max(zoomScale, 0.5), 3);
-                        pagesData.forEach(p => {
-                            p.css("transform", `scale(${zoomScale})`);
-                        });
+                        pagesData.forEach(p => p.css("transform", `scale(${zoomScale})`));
                     });
                 }
             });
@@ -105,5 +103,6 @@ pdfjsLib.getDocument(url).promise.then(pdf => {
     }
 });
 </script>
+
 </body>
 </html>
