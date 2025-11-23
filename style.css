@@ -1,49 +1,27 @@
-body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    margin: 20px;
-}
+body { font-family: Arial; text-align:center; margin:20px; }
 
 .container {
     width: 95%;
     max-width: 1000px;
-    margin: auto;
-    overflow: hidden; /* plus de scroll */
+    margin:auto;
+    overflow:hidden; /* plus de scroll */
 }
 
-#flipbook {
-    margin: auto;
-    position: relative;
-}
+#flipbook { margin:auto; position:relative; }
 
 #flipbook .page {
     position: relative;
-    background: white;
-    overflow: hidden;
-    margin: auto;
+    background:white;
+    overflow:hidden;
 }
 
-/* Overlays clic gauche/droite avec effet visuel */
+/* Overlays clic gauche/droite */
 .page-overlay {
-    position: absolute;
-    top: 0;
-    height: 100%;
-    width: 50%;
-    cursor: pointer;
-    z-index: 10;
+    position:absolute;
+    top:0; height:100%; width:50%; cursor:pointer; z-index:10;
     transition: background 0.3s;
 }
 
-.page-overlay.left {
-    left: 0;
-    background: rgba(0, 0, 255, 0.05);
-}
-
-.page-overlay.right {
-    right: 0;
-    background: rgba(255, 0, 0, 0.05);
-}
-
-.page-overlay:hover {
-    background: rgba(0, 0, 0, 0.1);
-}
+.page-overlay.left { left:0; background:rgba(0,0,255,0.05);}
+.page-overlay.right { right:0; background:rgba(255,0,0,0.05);}
+.page-overlay:hover { background:rgba(0,0,0,0.1);}
