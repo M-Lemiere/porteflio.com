@@ -6,8 +6,9 @@ body {
 
 .container {
     width: 95%;
-    max-width: 900px;
+    max-width: 1000px; /* Ajuste selon ton écran */
     margin: auto;
+    overflow-x: auto; /* Permet de scroller si la page est large */
 }
 
 #flipbook {
@@ -21,7 +22,7 @@ body {
     overflow: hidden;
 }
 
-/* Overlays pour clic gauche/droite avec effet visuel */
+/* Overlays clic gauche/droite avec effet visuel */
 .page-overlay {
     position: absolute;
     top: 0;
@@ -34,16 +35,14 @@ body {
 
 .page-overlay.left {
     left: 0;
-    background: rgba(0, 0, 255, 0.05); /* bleu très clair */
+    background: rgba(0, 0, 255, 0.05);
 }
 
 .page-overlay.right {
     right: 0;
-    background: rgba(255, 0, 0, 0.05); /* rouge très clair */
+    background: rgba(255, 0, 0, 0.05);
 }
 
-/* Au survol souris */
 .page-overlay:hover {
     background: rgba(0, 0, 0, 0.1);
 }
-
