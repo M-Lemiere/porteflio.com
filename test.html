@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Flipbook Turn.js</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        #flipbook {
+            width: 600px;
+            height: 400px;
+            margin: auto;
+        }
+        #flipbook .page {
+            background: #f0f0f0;
+            width: 100%;
+            height: 100%;
+            font-size: 30px;
+            line-height: 400px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+        }
+    </style>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Turn.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/4.1.0/turn.min.js"></script>
+</head>
+<body>
+
+<h1>Test Flipbook Turn.js</h1>
+
+<div class="container">
+    <button id="prevBtn">⟨ Page précédente</button>
+    <div id="flipbook">
+        <div class="page">Page 1</div>
+        <div class="page">Page 2</div>
+        <div class="page">Page 3</div>
+    </div>
+    <button id="nextBtn">Page suivante ⟩</button>
+</div>
+
+<script>
+$(document).ready(function() {
+    const flipbook = $("#flipbook");
+    
+    // Initialisation Turn.js
+    flipbook.turn({
+        width: 600,
+        height: 400,
+        autoCenter: true
+    });
+
+    // Boutons
+    $("#prevBtn").click(() => flipbook.turn("previous"));
+    $("#nextBtn").click(() => flipbook.turn("next"));
+});
+</script>
+
+</body>
+</html>
