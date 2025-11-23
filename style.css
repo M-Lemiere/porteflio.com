@@ -4,7 +4,7 @@ body { font-family: Arial; text-align:center; margin:20px; }
     width: 95%;
     max-width: 1000px;
     margin:auto;
-    overflow:hidden; /* plus de scroll */
+    overflow:hidden;
 }
 
 #flipbook { margin:auto; position:relative; }
@@ -21,7 +21,6 @@ body { font-family: Arial; text-align:center; margin:20px; }
     top:0; height:100%; width:50%; cursor:pointer; z-index:10;
     transition: background 0.3s;
 }
-
 .page-overlay.left { left:0; background:rgba(0,0,255,0.05);}
 .page-overlay.right { right:0; background:rgba(255,0,0,0.05);}
 .page-overlay:hover { background:rgba(0,0,0,0.1);}
