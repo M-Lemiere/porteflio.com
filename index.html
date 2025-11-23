@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Flipbook PDF</title>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Turn.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/4.1.0/turn.min.js"></script>
+
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>
+        // Assurer que pdfjsLib est défini
+        pdfjsLib = window['pdfjs-dist/build/pdf'];
+    </script>
+</head>
+<body>
+
+<h1>Mon Flipbook PDF</h1>
+
+<div class="container">
+    <button id="prevBtn">⟨ Page précédente</button>
+    <div id="flipbook"></div>
+    <button id="nextBtn">Page suivante ⟩</button>
+</div>
+
+<script>
+const url = 'pdf/mon-document.pdf'; // chemin vers ton PDF
+const flipbook = $("#flipbook");
+
+// Fonction pour charger les pages PDF dans le flipbook
+pdfjsLib.getDocument(url).promise.then(pdf => {
+    let loadedPages = 0;
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+        pdf.getPage(i).then(page => {
+            const viewport = page.getViewport({ scale: 1.5 });
+            const canvas = document.createElement('canvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            const context = canvas.getContext('2d');
+
+            page.render({ canvasContext: context, viewport: viewport }).promise.then(() => {
+                const pageDiv = $('<div class="page"></div>').append(canvas);
+                flipbook.append(pageDiv);
+
+                loadedPages++;
+                // Initialiser Turn.js quand toutes les pages sont chargées
+                if (loadedPages === pdf.numPages) {
+                    flipbook.turn({
+                        width: viewport.width,
+                        height: viewport.height,
+                        autoCenter: true,
+                        elevation: 50,
+                        gradients: true,
+                        acceleration: true
+                    });

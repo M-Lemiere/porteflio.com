@@ -1,0 +1,15 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background: #f3f3f3;
+}
+
+#flipbook {
+    margin: 20px auto;
+}
+
+#flipbook img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
