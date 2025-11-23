@@ -2,12 +2,22 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Flipbook PDF A3 Vertical Responsive</title>
+<title>Flipbook PDF A3 Vertical</title>
 <style>
 body { font-family: Arial; text-align: center; margin: 20px; }
 .container { width: 95%; max-width: 900px; margin: auto; }
-#flipbook { margin: auto; }
-#flipbook .page { background: white; width: 100%; height: 100%; cursor: pointer; }
+#flipbook { margin: auto; position: relative; }
+#flipbook .page { position: relative; background: white; overflow: hidden; }
+.page-overlay {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 50%;
+    cursor: pointer;
+    z-index: 10;
+}
+.page-overlay.left { left: 0; }
+.page-overlay.right { right: 0; }
 </style>
 
 <!-- jQuery -->
@@ -28,8 +38,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc =
 </head>
 <body>
 
-<h1>Flipbook PDF A3 Vertical Responsive</h1>
-
+<h1>Flipbook PDF A3 Vertical</h1>
 <div class="container">
     <div id="flipbook"></div>
 </div>
@@ -39,14 +48,7 @@ const url = 'pdf/mon-document.pdf';
 const flipbook = $("#flipbook");
 let zoomScale = 1;
 
-function initFlipbook(width, height) {
-    flipbook.turn({
-        width: width,
-        height: height,
-        autoCenter: true
-    });
-}
-
+// Fonction pour appliquer le zoom
 function applyZoom() {
     flipbook.css("transform", `scale(${zoomScale})`);
     flipbook.css("transform-origin", "center center");
@@ -56,10 +58,12 @@ function applyZoom() {
 pdfjsLib.getDocument(url).promise.then(pdf => {
     let loadedPages = 0;
     const totalPages = pdf.numPages;
+    let pageWidth = 0;
+    let pageHeight = 0;
 
     for (let i = 1; i <= totalPages; i++) {
         pdf.getPage(i).then(page => {
-            const viewport = page.getViewport({ scale: 2.0 }); // meilleur détail pour A3
+            const viewport = page.getViewport({ scale: 2.0 });
             const canvas = document.createElement("canvas");
             canvas.width = viewport.width;
             canvas.height = viewport.height;
@@ -67,22 +71,41 @@ pdfjsLib.getDocument(url).promise.then(pdf => {
 
             page.render({ canvasContext: ctx, viewport: viewport }).promise.then(() => {
                 const div = $('<div class="page"></div>').append(canvas);
+
+                // Ajouter overlays pour flip gauche/droite
+                const overlayLeft = $('<div class="page-overlay left"></div>');
+                const overlayRight = $('<div class="page-overlay right"></div>');
+                overlayLeft.click(()=> flipbook.turn("previous"));
+                overlayRight.click(()=> flipbook.turn("next"));
+                div.append(overlayLeft, overlayRight);
+
                 flipbook.append(div);
                 loadedPages++;
 
-                if (loadedPages === totalPages) {
-                    // Calcul responsive basé sur PDF
-                    const maxWidth = $('.container').width();
-                    const maxHeight = $(window).height() * 0.8; // 80% hauteur écran
-                    const scale = Math.min(maxWidth / viewport.width, maxHeight / viewport.height);
+                // Pour la première page, déterminer dimensions
+                if(i === 1){
+                    pageWidth = canvas.width;
+                    pageHeight = canvas.height;
+                }
 
-                    initFlipbook(viewport.width * scale, viewport.height * scale);
+                if(loadedPages === totalPages){
+                    // Calcul responsive
+                    const maxWidth = $('.container').width();
+                    const maxHeight = $(window).height() * 0.8;
+                    const scale = Math.min(maxWidth / pageWidth, maxHeight / pageHeight);
+
+                    // Initialisation flipbook
+                    flipbook.turn({
+                        width: pageWidth * scale,
+                        height: pageHeight * scale,
+                        autoCenter: true
+                    });
 
                     // Redimensionnement responsive
                     $(window).resize(() => {
-                        const newScale = Math.min($('.container').width() / viewport.width,
-                                                  $(window).height() * 0.8 / viewport.height);
-                        flipbook.turn("size", viewport.width * newScale, viewport.height * newScale);
+                        const newScale = Math.min($('.container').width() / pageWidth,
+                                                  $(window).height() * 0.8 / pageHeight);
+                        flipbook.turn("size", pageWidth * newScale, pageHeight * newScale);
                     });
 
                     // Zoom tactile
@@ -100,24 +123,11 @@ pdfjsLib.getDocument(url).promise.then(pdf => {
                         zoomScale = Math.min(Math.max(zoomScale, 0.5), 3);
                         applyZoom();
                     });
-
-                    // Flip en cliquant sur la page
-                    flipbook.on("click", function(e){
-                        const offset = $(this).offset();
-                        const clickX = e.pageX - offset.left;
-                        const halfWidth = $(this).width() / 2;
-                        if(clickX < halfWidth){
-                            flipbook.turn("previous");
-                        } else {
-                            flipbook.turn("next");
-                        }
-                    });
                 }
             });
         });
     }
 });
 </script>
-
 </body>
 </html>
