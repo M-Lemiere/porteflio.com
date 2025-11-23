@@ -5,20 +5,13 @@
 <title>Flipbook PDF A3 Vertical Responsive</title>
 <link rel="stylesheet" href="style.css">
 
-<!-- jQuery -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-<!-- Turn.js local -->
 <script src="js/turn.min.js"></script>
-
-<!-- PDF.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc =
 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 </script>
-
-<!-- Hammer.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
 </head>
 <body>
@@ -66,24 +59,25 @@ pdfjsLib.getDocument(url).promise.then(pdf => {
                     const pageWidth = firstCanvas.width;
                     const pageHeight = firstCanvas.height;
 
+                    // Créer flipbook avec dimensions réelles
                     flipbook.turn({
                         width: pageWidth,
                         height: pageHeight,
                         autoCenter: true
                     });
 
-                    // Fonction responsive : redimensionner chaque canvas
-                    function resizePages() {
+                    // Fonction responsive : scale flipbook entier
+                    function resizeFlipbook() {
                         const containerWidth = $('.container').width();
-                        const scale = containerWidth / pageWidth;
+                        const scale = Math.min(containerWidth / pageWidth, 1);
+                        flipbook.turn("size", pageWidth * scale, pageHeight * scale);
                         pagesData.forEach(p => {
-                            const c = p.find("canvas")[0];
-                            c.style.width = pageWidth * scale + "px";
-                            c.style.height = pageHeight * scale + "px";
+                            p.css("transform", `scale(${scale})`);
+                            p.css("transform-origin", "top left");
                         });
                     }
-                    resizePages();
-                    $(window).resize(resizePages);
+                    resizeFlipbook();
+                    $(window).resize(resizeFlipbook);
 
                     // Zoom tactile
                     const hammertime = new Hammer(flipbook[0]);
@@ -92,9 +86,7 @@ pdfjsLib.getDocument(url).promise.then(pdf => {
                     hammertime.on("pinch", ev => {
                         zoomScale = Math.min(Math.max(zoomScale * ev.scale, 0.5), 3);
                         pagesData.forEach(p => {
-                            const c = p.find("canvas")[0];
-                            c.style.transform = `scale(${zoomScale})`;
-                            c.style.transformOrigin = "top center";
+                            p.css("transform", `scale(${zoomScale})`);
                         });
                     });
 
@@ -104,8 +96,7 @@ pdfjsLib.getDocument(url).promise.then(pdf => {
                         zoomScale += e.originalEvent.deltaY < 0 ? 0.1 : -0.1;
                         zoomScale = Math.min(Math.max(zoomScale, 0.5), 3);
                         pagesData.forEach(p => {
-                            const c = p.find("canvas")[0];
-                            c.style.transform = `scale(${zoomScale})`;
+                            p.css("transform", `scale(${zoomScale})`);
                         });
                     });
                 }
@@ -114,6 +105,5 @@ pdfjsLib.getDocument(url).promise.then(pdf => {
     }
 });
 </script>
-
 </body>
 </html>
