@@ -3,22 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Flipbook PDF A3 Vertical</title>
-<style>
-body { font-family: Arial; text-align: center; margin: 20px; }
-.container { width: 95%; max-width: 900px; margin: auto; }
-#flipbook { margin: auto; position: relative; }
-#flipbook .page { position: relative; background: white; overflow: hidden; }
-.page-overlay {
-    position: absolute;
-    top: 0;
-    height: 100%;
-    width: 50%;
-    cursor: pointer;
-    z-index: 10;
-}
-.page-overlay.left { left: 0; }
-.page-overlay.right { right: 0; }
-</style>
+<link rel="stylesheet" href="style.css">
 
 <!-- jQuery -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -46,88 +31,63 @@ pdfjsLib.GlobalWorkerOptions.workerSrc =
 <script>
 const url = 'pdf/mon-document.pdf';
 const flipbook = $("#flipbook");
-let zoomScale = 1;
 
-// Fonction pour appliquer le zoom
-function applyZoom() {
-    flipbook.css("transform", `scale(${zoomScale})`);
-    flipbook.css("transform-origin", "center center");
-}
-
-// Charger le PDF
 pdfjsLib.getDocument(url).promise.then(pdf => {
-    let loadedPages = 0;
-    const totalPages = pdf.numPages;
-    let pageWidth = 0;
-    let pageHeight = 0;
+    pdf.getPage(1).then(firstPage => {
+        const viewport = firstPage.getViewport({ scale: 2.0 });
+        const pageWidth = viewport.width;
+        const pageHeight = viewport.height;
 
-    for (let i = 1; i <= totalPages; i++) {
-        pdf.getPage(i).then(page => {
-            const viewport = page.getViewport({ scale: 2.0 });
-            const canvas = document.createElement("canvas");
-            canvas.width = viewport.width;
-            canvas.height = viewport.height;
-            const ctx = canvas.getContext("2d");
-
-            page.render({ canvasContext: ctx, viewport: viewport }).promise.then(() => {
-                const div = $('<div class="page"></div>').append(canvas);
-
-                // Ajouter overlays pour flip gauche/droite
-                const overlayLeft = $('<div class="page-overlay left"></div>');
-                const overlayRight = $('<div class="page-overlay right"></div>');
-                overlayLeft.click(()=> flipbook.turn("previous"));
-                overlayRight.click(()=> flipbook.turn("next"));
-                div.append(overlayLeft, overlayRight);
-
-                flipbook.append(div);
-                loadedPages++;
-
-                // Pour la première page, déterminer dimensions
-                if(i === 1){
-                    pageWidth = canvas.width;
-                    pageHeight = canvas.height;
-                }
-
-                if(loadedPages === totalPages){
-                    // Calcul responsive
-                    const maxWidth = $('.container').width();
-                    const maxHeight = $(window).height() * 0.8;
-                    const scale = Math.min(maxWidth / pageWidth, maxHeight / pageHeight);
-
-                    // Initialisation flipbook
-                    flipbook.turn({
-                        width: pageWidth * scale,
-                        height: pageHeight * scale,
-                        autoCenter: true
-                    });
-
-                    // Redimensionnement responsive
-                    $(window).resize(() => {
-                        const newScale = Math.min($('.container').width() / pageWidth,
-                                                  $(window).height() * 0.8 / pageHeight);
-                        flipbook.turn("size", pageWidth * newScale, pageHeight * newScale);
-                    });
-
-                    // Zoom tactile
-                    const hammertime = new Hammer(flipbook[0]);
-                    hammertime.get("pinch").set({ enable: true });
-                    hammertime.on("pinch", ev => {
-                        zoomScale = Math.min(Math.max(zoomScale * ev.scale, 0.5), 3);
-                        applyZoom();
-                    });
-
-                    // Zoom molette
-                    flipbook.on("wheel", e => {
-                        e.preventDefault();
-                        zoomScale += e.originalEvent.deltaY < 0 ? 0.1 : -0.1;
-                        zoomScale = Math.min(Math.max(zoomScale, 0.5), 3);
-                        applyZoom();
-                    });
-                }
-            });
+        // Créer flipbook avec dimensions exactes
+        flipbook.turn({
+            width: pageWidth,
+            height: pageHeight,
+            autoCenter: true
         });
-    }
+
+        // Charger toutes les pages
+        for(let i = 1; i <= pdf.numPages; i++){
+            pdf.getPage(i).then(page => {
+                const vp = page.getViewport({ scale: 2.0 });
+                const canvas = document.createElement("canvas");
+                canvas.width = vp.width;
+                canvas.height = vp.height;
+
+                page.render({ canvasContext: canvas.getContext("2d"), viewport: vp }).promise.then(()=>{
+                    const div = $('<div class="page"></div>').append(canvas);
+
+                    // Overlays clic gauche/droite avec effet visuel
+                    const overlayLeft = $('<div class="page-overlay left"></div>');
+                    const overlayRight = $('<div class="page-overlay right"></div>');
+                    overlayLeft.click(()=> flipbook.turn("previous"));
+                    overlayRight.click(()=> flipbook.turn("next"));
+                    div.append(overlayLeft, overlayRight);
+
+                    flipbook.append(div);
+                });
+            });
+        }
+
+        // Zoom tactile
+        const hammertime = new Hammer(flipbook[0]);
+        hammertime.get("pinch").set({ enable: true });
+        let zoomScale = 1;
+        hammertime.on("pinch", ev => {
+            zoomScale = Math.min(Math.max(zoomScale * ev.scale, 0.5), 3);
+            flipbook.css("transform", `scale(${zoomScale})`);
+            flipbook.css("transform-origin", "top center");
+        });
+
+        // Zoom molette
+        flipbook.on("wheel", e => {
+            e.preventDefault();
+            zoomScale += e.originalEvent.deltaY < 0 ? 0.1 : -0.1;
+            zoomScale = Math.min(Math.max(zoomScale, 0.5), 3);
+            flipbook.css("transform", `scale(${zoomScale})`);
+        });
+    });
 });
 </script>
 </body>
 </html>
+
