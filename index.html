@@ -1,19 +1,74 @@
-<!-- PDF.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-<script>
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-</script>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Flipbook PDF Zoom Tactile</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 900px;
+            margin: auto;
+        }
+
+        #flipbook {
+            width: 800px;
+            height: 600px;
+            margin: auto;
+        }
+
+        #flipbook .page {
+            background: white;
+            width: 100%;
+            height: 100%;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+        }
+    </style>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Turn.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/4.1.0/turn.min.js"></script>
+
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc =
+          'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    </script>
+
+    <!-- Hammer.js pour le zoom tactile -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+</head>
+<body>
+
+<h1>Flipbook PDF Zoom Tactile</h1>
+
+<div class="container">
+    <button id="prevBtn">⟨ Page précédente</button>
+    <div id="flipbook"></div>
+    <button id="nextBtn">Page suivante ⟩</button>
+</div>
 
 <script>
-const url = 'pdf/mon-document.pdf'; // pdf dans le dossier pdf/
+const url = 'pdf/mon-document.pdf'; // Assure-toi que le PDF est ici : /pdf/mon-document.pdf
 const flipbook = $("#flipbook");
-
 let zoomScale = 1;
 
 pdfjsLib.getDocument(url).promise.then(pdf => {
     let loadedPages = 0;
-    let totalPages = pdf.numPages;
+    const totalPages = pdf.numPages;
 
     for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
         pdf.getPage(pageNum).then(page => {
@@ -29,16 +84,15 @@ pdfjsLib.getDocument(url).promise.then(pdf => {
 
                 loadedPages++;
 
-                // Quand toutes les pages sont chargées
                 if (loadedPages === totalPages) {
-                    // Initialiser Turn.js après que toutes les pages soient dans le DOM
+                    // Toutes les pages sont chargées → initialiser Turn.js
                     flipbook.turn({
-                        width: 800,   // largeur fixe pour que ça fonctionne
-                        height: 600,  // hauteur fixe
+                        width: 800,
+                        height: 600,
                         autoCenter: true
                     });
 
-                    // Zoom tactile
+                    // Zoom tactile avec Hammer.js
                     const hammertime = new Hammer(flipbook[0]);
                     hammertime.get("pinch").set({ enable: true });
                     hammertime.on("pinch", ev => {
@@ -46,6 +100,7 @@ pdfjsLib.getDocument(url).promise.then(pdf => {
                         applyZoom();
                     });
 
+                    // Zoom avec la molette
                     flipbook.on("wheel", function(e){
                         e.preventDefault();
                         zoomScale += e.originalEvent.deltaY < 0 ? 0.1 : -0.1;
@@ -53,7 +108,7 @@ pdfjsLib.getDocument(url).promise.then(pdf => {
                         applyZoom();
                     });
 
-                    // Boutons
+                    // Boutons de navigation
                     $("#prevBtn").click(()=> flipbook.turn("previous"));
                     $("#nextBtn").click(()=> flipbook.turn("next"));
                 }
@@ -67,3 +122,6 @@ function applyZoom(){
     flipbook.css("transform-origin", "center center");
 }
 </script>
+
+</body>
+</html>
