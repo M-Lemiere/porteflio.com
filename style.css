@@ -8,7 +8,7 @@ body {
     width: 95%;
     max-width: 1000px;
     margin: auto;
-    overflow-x: auto; /* Permet de scroller si trop large */
+    overflow: hidden; /* plus de scroll */
 }
 
 #flipbook {
@@ -20,6 +20,7 @@ body {
     position: relative;
     background: white;
     overflow: hidden;
+    margin: auto;
 }
 
 /* Overlays clic gauche/droite avec effet visuel */
