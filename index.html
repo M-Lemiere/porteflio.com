@@ -2,13 +2,12 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Flipbook PDF Zoom Tactile</title>
+<title>Flipbook PDF A3 Vertical Responsive</title>
 <style>
-    body { font-family: Arial; text-align: center; margin: 20px; }
-    .container { width: 90%; max-width: 900px; margin: auto; }
-    #flipbook { width: 90%; max-width: 800px; height: 600px; margin: auto; }
-    #flipbook .page { background: white; width: 100%; height: 100%; }
-    button { padding: 10px 20px; margin: 10px; font-size: 16px; }
+body { font-family: Arial; text-align: center; margin: 20px; }
+.container { width: 95%; max-width: 900px; margin: auto; }
+#flipbook { margin: auto; }
+#flipbook .page { background: white; width: 100%; height: 100%; cursor: pointer; }
 </style>
 
 <!-- jQuery -->
@@ -20,28 +19,38 @@
 <!-- PDF.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 </script>
 
 <!-- Hammer.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
-
 </head>
 <body>
 
-<h1>Flipbook PDF Zoom Tactile</h1>
+<h1>Flipbook PDF A3 Vertical Responsive</h1>
 
 <div class="container">
-    <button id="prevBtn">⟨ Page précédente</button>
     <div id="flipbook"></div>
-    <button id="nextBtn">Page suivante ⟩</button>
 </div>
 
 <script>
-const url = 'pdf/mon-document.pdf'; // PDF dans dossier /pdf/
+const url = 'pdf/mon-document.pdf';
 const flipbook = $("#flipbook");
 let zoomScale = 1;
+
+function initFlipbook(width, height) {
+    flipbook.turn({
+        width: width,
+        height: height,
+        autoCenter: true
+    });
+}
+
+function applyZoom() {
+    flipbook.css("transform", `scale(${zoomScale})`);
+    flipbook.css("transform-origin", "center center");
+}
 
 // Charger le PDF
 pdfjsLib.getDocument(url).promise.then(pdf => {
@@ -50,7 +59,7 @@ pdfjsLib.getDocument(url).promise.then(pdf => {
 
     for (let i = 1; i <= totalPages; i++) {
         pdf.getPage(i).then(page => {
-            const viewport = page.getViewport({ scale: 1.5 });
+            const viewport = page.getViewport({ scale: 2.0 }); // meilleur détail pour A3
             const canvas = document.createElement("canvas");
             canvas.width = viewport.width;
             canvas.height = viewport.height;
@@ -59,14 +68,21 @@ pdfjsLib.getDocument(url).promise.then(pdf => {
             page.render({ canvasContext: ctx, viewport: viewport }).promise.then(() => {
                 const div = $('<div class="page"></div>').append(canvas);
                 flipbook.append(div);
-
                 loadedPages++;
+
                 if (loadedPages === totalPages) {
-                    // Toutes les pages chargées → init flipbook
-                    flipbook.turn({
-                        width: 800,
-                        height: 600,
-                        autoCenter: true
+                    // Calcul responsive basé sur PDF
+                    const maxWidth = $('.container').width();
+                    const maxHeight = $(window).height() * 0.8; // 80% hauteur écran
+                    const scale = Math.min(maxWidth / viewport.width, maxHeight / viewport.height);
+
+                    initFlipbook(viewport.width * scale, viewport.height * scale);
+
+                    // Redimensionnement responsive
+                    $(window).resize(() => {
+                        const newScale = Math.min($('.container').width() / viewport.width,
+                                                  $(window).height() * 0.8 / viewport.height);
+                        flipbook.turn("size", viewport.width * newScale, viewport.height * newScale);
                     });
 
                     // Zoom tactile
@@ -78,26 +94,29 @@ pdfjsLib.getDocument(url).promise.then(pdf => {
                     });
 
                     // Zoom molette
-                    flipbook.on("wheel", function(e){
+                    flipbook.on("wheel", e => {
                         e.preventDefault();
                         zoomScale += e.originalEvent.deltaY < 0 ? 0.1 : -0.1;
                         zoomScale = Math.min(Math.max(zoomScale, 0.5), 3);
                         applyZoom();
                     });
 
-                    // Boutons
-                    $("#prevBtn").click(()=> flipbook.turn("previous"));
-                    $("#nextBtn").click(()=> flipbook.turn("next"));
+                    // Flip en cliquant sur la page
+                    flipbook.on("click", function(e){
+                        const offset = $(this).offset();
+                        const clickX = e.pageX - offset.left;
+                        const halfWidth = $(this).width() / 2;
+                        if(clickX < halfWidth){
+                            flipbook.turn("previous");
+                        } else {
+                            flipbook.turn("next");
+                        }
+                    });
                 }
             });
         });
     }
 });
-
-function applyZoom(){
-    flipbook.css("transform", `scale(${zoomScale})`);
-    flipbook.css("transform-origin", "center center");
-}
 </script>
 
 </body>
