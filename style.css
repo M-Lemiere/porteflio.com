@@ -6,9 +6,9 @@ body {
 
 .container {
     width: 95%;
-    max-width: 1000px; /* Ajuste selon ton écran */
+    max-width: 1000px;
     margin: auto;
-    overflow-x: auto; /* Permet de scroller si la page est large */
+    overflow-x: auto; /* Permet de scroller si trop large */
 }
 
 #flipbook {
