@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Flipbook PDF A3 Vertical Animé</title>
+<title>Flipbook PDF A3 Vertical Pleine Hauteur</title>
 <link rel="stylesheet" href="style.css">
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -16,7 +16,6 @@ pdfjsLib.GlobalWorkerOptions.workerSrc =
 </head>
 <body>
 
-<h1>Flipbook PDF A3 Vertical Animé</h1>
 <div class="container">
     <div id="flipbook"></div>
 </div>
@@ -64,15 +63,15 @@ pdfjsLib.getDocument(url).promise.then(pdf => {
                         width: pageWidth,
                         height: pageHeight,
                         autoCenter: true,
-                        duration: 1000, // durée de l'animation en ms
+                        duration: 1000,
                         acceleration: true,
                         gradients: true
                     });
 
-                    // Responsive : scale flipbook pour s'adapter au conteneur
+                    // Fonction responsive basée sur la hauteur
                     function resizeFlipbook() {
-                        const containerWidth = $('.container').width();
-                        const scale = Math.min(containerWidth / pageWidth, 1);
+                        const containerHeight = $('.container').height();
+                        const scale = containerHeight / pageHeight;
                         flipbook.turn("size", pageWidth * scale, pageHeight * scale);
                         pagesData.forEach(p => {
                             p.css("transform", `scale(${scale})`);
