@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Flipbook PDF</title>
+    <title>Flipbook PDF Zoom Tactile</title>
     <link rel="stylesheet" href="style.css">
 
     <!-- jQuery -->
@@ -11,16 +11,16 @@
     <!-- Turn.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/4.1.0/turn.min.js"></script>
 
-    <!-- PDF.js -->
+    <!-- PDF.js (compatibles avec GitHub Pages) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-    <script>
-        // Assurer que pdfjsLib est défini
-        pdfjsLib = window['pdfjs-dist/build/pdf'];
-    </script>
+    <script>pdfjsLib = window['pdfjs-dist/build/pdf'];</script>
+
+    <!-- Hammer.js pour le zoom tactile -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
 </head>
 <body>
 
-<h1>Mon Flipbook PDF</h1>
+<h1>Flipbook PDF Zoom Tactile</h1>
 
 <div class="container">
     <button id="prevBtn">⟨ Page précédente</button>
@@ -29,33 +29,77 @@
 </div>
 
 <script>
-const url = 'pdf/mon-document.pdf'; // chemin vers ton PDF
+const url = 'pdf/mon-document.pdf'; // pdf dans le dossier pdf/
 const flipbook = $("#flipbook");
 
-// Fonction pour charger les pages PDF dans le flipbook
+let zoomScale = 1;
+
+// Charger le PDF
 pdfjsLib.getDocument(url).promise.then(pdf => {
     let loadedPages = 0;
 
-    for (let i = 1; i <= pdf.numPages; i++) {
-        pdf.getPage(i).then(page => {
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        pdf.getPage(pageNum).then(page => {
             const viewport = page.getViewport({ scale: 1.5 });
-            const canvas = document.createElement('canvas');
+            const canvas = document.createElement("canvas");
             canvas.width = viewport.width;
             canvas.height = viewport.height;
-            const context = canvas.getContext('2d');
+            const ctx = canvas.getContext("2d");
 
-            page.render({ canvasContext: context, viewport: viewport }).promise.then(() => {
-                const pageDiv = $('<div class="page"></div>').append(canvas);
-                flipbook.append(pageDiv);
+            page.render({ canvasContext: ctx, viewport: viewport }).promise.then(() => {
+                const div = $('<div class="page"></div>').append(canvas);
+                flipbook.append(div);
 
                 loadedPages++;
-                // Initialiser Turn.js quand toutes les pages sont chargées
+
                 if (loadedPages === pdf.numPages) {
+                    // Initialisation du flipbook
+                    const maxWidth = $('.container').width();
+                    const scale = Math.min(maxWidth / viewport.width, 1);
+
                     flipbook.turn({
-                        width: viewport.width,
-                        height: viewport.height,
+                        width: viewport.width * scale,
+                        height: viewport.height * scale,
                         autoCenter: true,
-                        elevation: 50,
-                        gradients: true,
-                        acceleration: true
                     });
+
+                    // Redimensionnement responsive
+                    $(window).resize(function(){
+                        const newScale = Math.min($('.container').width() / viewport.width, 1);
+                        flipbook.turn("size", viewport.width * newScale, viewport.height * newScale);
+                    });
+
+                    // Zoom tactile avec Hammer.js
+                    const hammertime = new Hammer(flipbook[0]);
+                    hammertime.get("pinch").set({ enable: true });
+
+                    hammertime.on("pinch", function(ev){
+                        zoomScale = Math.min(Math.max(zoomScale * ev.scale, 0.5), 3);
+                        applyZoom();
+                    });
+
+                    // Molette zoom PC
+                    flipbook.on("wheel", function(e){
+                        e.preventDefault();
+                        zoomScale += e.originalEvent.deltaY < 0 ? 0.1 : -0.1;
+                        zoomScale = Math.min(Math.max(zoomScale, 0.5), 3);
+                        applyZoom();
+                    });
+                }
+            });
+        });
+    }
+});
+
+function applyZoom(){
+    flipbook.css("transform", `scale(${zoomScale})`);
+    flipbook.css("transform-origin", "center center");
+}
+
+// Boutons
+$("#prevBtn").click(()=> flipbook.turn("previous"));
+$("#nextBtn").click(()=> flipbook.turn("next"));
+</script>
+
+</body>
+</html>
