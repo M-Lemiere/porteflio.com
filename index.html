@@ -1,105 +1,39 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<title>Flipbook PDF A3 Vertical</title>
-<link rel="stylesheet" href="style.css">
+<div id="flipbook"></div>
 
-<!-- jQuery et Turn.js locaux -->
 <script src="js/jquery-3.6.0.min.js"></script>
 <script src="js/turn.min.js"></script>
-
-<!-- PDF.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script>
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-</script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
-<!-- Hammer.js pour zoom tactile -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
-</head>
-<body>
-
-<div class="container">
-    <div id="flipbook"></div>
-</div>
-
-<script>
 const url = 'pdf/mon-document.pdf';
 const flipbook = $("#flipbook");
 let pagesData = [];
 
 pdfjsLib.getDocument(url).promise.then(pdf => {
-    const totalPages = pdf.numPages;
     let loadedPages = 0;
 
-    for (let i = 1; i <= totalPages; i++) {
+    for(let i=1; i<=pdf.numPages; i++){
         pdf.getPage(i).then(page => {
-            const viewport = page.getViewport({ scale: 2.0 });
+            const viewport = page.getViewport({ scale: 2 });
             const canvas = document.createElement("canvas");
             canvas.width = viewport.width;
             canvas.height = viewport.height;
             const ctx = canvas.getContext("2d");
 
-            page.render({ canvasContext: ctx, viewport: viewport }).promise.then(() => {
+            page.render({canvasContext: ctx, viewport: viewport}).promise.then(()=>{
                 const div = $('<div class="page"></div>').append(canvas);
-
-                // Overlays clic gauche/droite
-                const overlayLeft = $('<div class="page-overlay left"></div>');
-                const overlayRight = $('<div class="page-overlay right"></div>');
-                overlayLeft.click(() => flipbook.turn("previous"));
-                overlayRight.click(() => flipbook.turn("next"));
-                div.append(overlayLeft, overlayRight);
-
                 pagesData[i-1] = div;
                 loadedPages++;
 
-                if (loadedPages === totalPages) {
-                    // Ajouter toutes les pages
-                    pagesData.forEach(p => flipbook.append(p));
+                if(loadedPages === pdf.numPages){
+                    pagesData.forEach(p=>flipbook.append(p));
 
-                    const firstCanvas = pagesData[0].find("canvas")[0];
-                    const pageWidth = firstCanvas.width;
-                    const pageHeight = firstCanvas.height;
-
-                    // Init flipbook avec animation
                     flipbook.turn({
-                        width: pageWidth,
-                        height: pageHeight,
+                        width: viewport.width,
+                        height: viewport.height,
                         autoCenter: true,
-                        duration: 1000,
-                        acceleration: true,
-                        gradients: true
-                    });
-
-                    // Responsive : scale basé sur la hauteur de la fenêtre
-                    function resizeFlipbook() {
-                        const containerHeight = $('.container').height();
-                        const scale = containerHeight / pageHeight;
-                        flipbook.turn("size", pageWidth * scale, pageHeight * scale);
-                        pagesData.forEach(p => {
-                            p.css("transform", `scale(${scale})`);
-                            p.css("transform-origin", "top left");
-                        });
-                    }
-                    resizeFlipbook();
-                    $(window).resize(resizeFlipbook);
-
-                    // Zoom tactile et molette
-                    let zoomScale = 1;
-                    const hammertime = new Hammer(flipbook[0]);
-                    hammertime.get("pinch").set({ enable: true });
-                    hammertime.on("pinch", ev => {
-                        zoomScale = Math.min(Math.max(zoomScale * ev.scale, 0.5), 3);
-                        pagesData.forEach(p => p.css("transform", `scale(${zoomScale})`));
-                    });
-
-                    flipbook.on("wheel", e => {
-                        e.preventDefault();
-                        zoomScale += e.originalEvent.deltaY < 0 ? 0.1 : -0.1;
-                        zoomScale = Math.min(Math.max(zoomScale, 0.5), 3);
-                        pagesData.forEach(p => p.css("transform", `scale(${zoomScale})`));
+                        duration: 1000
                     });
                 }
             });
@@ -107,6 +41,3 @@ pdfjsLib.getDocument(url).promise.then(pdf => {
     }
 });
 </script>
-
-</body>
-</html>
