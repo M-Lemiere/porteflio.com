@@ -1,11 +1,25 @@
-<div id="flipbook"></div>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Flipbook PDF A3</title>
+<link rel="stylesheet" href="style.css">
 
 <script src="js/jquery-3.6.0.min.js"></script>
 <script src="js/turn.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script>
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+pdfjsLib.GlobalWorkerOptions.workerSrc = 
+'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+</script>
+</head>
+<body>
 
+<div class="container">
+    <div id="flipbook"></div>
+</div>
+
+<script>
 const url = 'pdf/mon-document.pdf';
 const flipbook = $("#flipbook");
 let pagesData = [];
@@ -13,27 +27,72 @@ let pagesData = [];
 pdfjsLib.getDocument(url).promise.then(pdf => {
     let loadedPages = 0;
 
-    for(let i=1; i<=pdf.numPages; i++){
+    for(let i=1;i<=pdf.numPages;i++){
         pdf.getPage(i).then(page => {
-            const viewport = page.getViewport({ scale: 2 });
+            const viewport = page.getViewport({scale:2});
             const canvas = document.createElement("canvas");
             canvas.width = viewport.width;
             canvas.height = viewport.height;
             const ctx = canvas.getContext("2d");
 
-            page.render({canvasContext: ctx, viewport: viewport}).promise.then(()=>{
+            page.render({canvasContext:ctx, viewport:viewport}).promise.then(()=>{
                 const div = $('<div class="page"></div>').append(canvas);
+
+                // Overlays clic gauche/droite
+                const overlayLeft = $('<div class="page-overlay left"></div>');
+                const overlayRight = $('<div class="page-overlay right"></div>');
+                overlayLeft.click(()=>flipbook.turn("previous"));
+                overlayRight.click(()=>flipbook.turn("next"));
+                div.append(overlayLeft, overlayRight);
+
                 pagesData[i-1] = div;
                 loadedPages++;
 
                 if(loadedPages === pdf.numPages){
+                    // Ajouter toutes les pages au flipbook
                     pagesData.forEach(p=>flipbook.append(p));
 
+                    const firstCanvas = pagesData[0].find("canvas")[0];
+                    const pageWidth = firstCanvas.width;
+                    const pageHeight = firstCanvas.height;
+
+                    // Initialisation Turn.js
                     flipbook.turn({
-                        width: viewport.width,
-                        height: viewport.height,
-                        autoCenter: true,
-                        duration: 1000
+                        width: pageWidth,
+                        height: pageHeight,
+                        autoCenter:true,
+                        duration:1000,
+                        gradients:true,
+                        acceleration:true
+                    });
+
+                    // Responsive plein écran
+                    function resizeFlipbook(){
+                        const containerHeight = $('.container').height();
+                        const scale = containerHeight / pageHeight;
+                        flipbook.turn("size", pageWidth*scale, pageHeight*scale);
+                        pagesData.forEach(p=>{
+                            p.css("transform", `scale(${scale})`);
+                            p.css("transform-origin","top left");
+                        });
+                    }
+                    resizeFlipbook();
+                    $(window).resize(resizeFlipbook);
+
+                    // Zoom tactile et molette
+                    let zoomScale=1;
+                    const hammertime = new Hammer(flipbook[0]);
+                    hammertime.get("pinch").set({enable:true});
+                    hammertime.on("pinch", ev=>{
+                        zoomScale = Math.min(Math.max(zoomScale*ev.scale,0.5),3);
+                        pagesData.forEach(p=>p.css("transform",`scale(${zoomScale})`));
+                    });
+
+                    flipbook.on("wheel", e=>{
+                        e.preventDefault();
+                        zoomScale += e.originalEvent.deltaY<0?0.1:-0.1;
+                        zoomScale=Math.min(Math.max(zoomScale,0.5),3);
+                        pagesData.forEach(p=>p.css("transform",`scale(${zoomScale})`));
                     });
                 }
             });
@@ -41,3 +100,7 @@ pdfjsLib.getDocument(url).promise.then(pdf => {
     }
 });
 </script>
+
+</body>
+</html>
+
