@@ -2,16 +2,21 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Flipbook PDF A3 Vertical Pleine Hauteur</title>
+<title>Flipbook PDF A3 Vertical</title>
 <link rel="stylesheet" href="style.css">
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- jQuery et Turn.js locaux -->
+<script src="js/jquery-3.6.0.min.js"></script>
 <script src="js/turn.min.js"></script>
+
+<!-- PDF.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc =
 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 </script>
+
+<!-- Hammer.js pour zoom tactile -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
 </head>
 <body>
@@ -40,7 +45,7 @@ pdfjsLib.getDocument(url).promise.then(pdf => {
             page.render({ canvasContext: ctx, viewport: viewport }).promise.then(() => {
                 const div = $('<div class="page"></div>').append(canvas);
 
-                // Overlay clic gauche/droite
+                // Overlays clic gauche/droite
                 const overlayLeft = $('<div class="page-overlay left"></div>');
                 const overlayRight = $('<div class="page-overlay right"></div>');
                 overlayLeft.click(() => flipbook.turn("previous"));
@@ -68,7 +73,7 @@ pdfjsLib.getDocument(url).promise.then(pdf => {
                         gradients: true
                     });
 
-                    // Fonction responsive basée sur la hauteur
+                    // Responsive : scale basé sur la hauteur de la fenêtre
                     function resizeFlipbook() {
                         const containerHeight = $('.container').height();
                         const scale = containerHeight / pageHeight;
